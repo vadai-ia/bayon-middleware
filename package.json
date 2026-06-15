@@ -8,13 +8,15 @@
     "start": "next start",
     "lint": "next lint",
     "test:supabase": "node --env-file=.env.local scripts/test-supabase.mjs",
-    "test:mcp": "node --env-file=.env.local scripts/test-mcp.mjs"
+    "test:mcp": "node --env-file=.env.local scripts/test-mcp.mjs",
+    "check:logs": "node --env-file=.env.local scripts/check-logs.mjs"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.26.0",
     "@radix-ui/react-slot": "^1.2.5",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.108.1",
+    "@vercel/functions": "^3.7.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",

@@ -102,3 +102,19 @@ Read this before writing code. Add every new error you encounter before committi
 **What happened (this project, M1):** the `@modelcontextprotocol/sdk` `server.tool(...)` callback expects a return assignable to `CallToolResult`, whose type includes an index signature (`[x: string]: unknown`, for `_meta`/`structuredContent`). A narrow helper interface (`{ content: {type:"text";text:string}[]; isError: boolean }`) failed `next build` with "Index signature for type 'string' is missing in type 'ToolResult'". Dev did not surface it (ERRORES.md #5).
 
 **How to avoid it:** the tool-result helper type must add `[key: string]: unknown;` so it stays structurally assignable to the SDK's `CallToolResult` (or import the SDK type directly). Do NOT cast with `any` (CLAUDE.md). Note: Streamable HTTP responses come back SSE-framed (`content-type: text/event-stream`, `event: message\ndata: {…}`) even when `Accept` includes `application/json` — this is correct; Whaapy sends `Accept: application/json, text/event-stream` and parses it.
+
+---
+
+## 13. Fire-and-forget log silently dropped when the Vercel function returns (M3)
+
+**Risk for this project (M3):** the request log is written at the END of the tools/call (duration and result count are only known then). A naive non-awaited `insert()` (true fire-and-forget) is dispatched but the serverless function returns immediately after the response — Vercel then freezes/tears down the process and the in-flight write is silently dropped. Locally it "works" (the Node process keeps running), so this never shows up in dev (mirrors ERRORES.md #5) — only in production do rows go missing. Awaiting the write instead would fix the drop but block the agent and risk the 30s timeout (ERRORES.md #7) — not acceptable either.
+
+**How to avoid it:** use `waitUntil()` from `@vercel/functions`. Start the write (the promise begins executing) and hand the promise to `waitUntil` — Vercel extends the function lifetime until it settles WITHOUT making the agent wait on it. Next.js 14.2 has no `after`/`unstable_after` (those land later) and `mcp-handler` doesn't expose `waitUntil`, so the `@vercel/functions` dependency is required. Outside a request context (local dev, CLI scripts) `waitUntil` may throw — catch it and let the already-running promise finish. The log writer must also swallow all its own errors so a slow/failing write can never turn into a failed tool call.
+
+---
+
+## 14. Two distinct status vocabularies: Whaapy envelope vs. the log column (M3)
+
+**What happened (this project, M3):** the response envelope uses the Whaapy spec status values (`success`, `needs_more_info`, …) while the `mcp_request_logs.status` column has its own CHECK constraint (`success | no_results | error | timeout`) chosen for analytics. A "no results" call is `needs_more_info` to the agent but `no_results` in the log — these are deliberately different, NOT a bug to reconcile. Blindly writing the envelope status into the column would violate the CHECK (`needs_more_info` is not allowed) and corrupt the dashboard's vocabulary.
+
+**How to avoid it:** keep them separate. `MCP_STATUS` (constants.ts) is the agent-facing envelope vocabulary; `MCP_LOG_STATUS` is the internal analytics/log vocabulary that matches the DB CHECK. Logging MAPS one outcome to the other (results>0 → `success`, results=0 → `no_results`, thrown → `error`); it never changes what the agent receives. Do not "fix" the mismatch by unifying them.

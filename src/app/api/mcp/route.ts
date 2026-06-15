@@ -18,6 +18,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 
 import {
+  MCP_LOG_STATUS,
   MCP_MAX_DURATION_SECONDS,
   MCP_NO_RESULTS_NEXT_QUESTION,
   MCP_SERVER_INFO,
@@ -26,6 +27,7 @@ import {
 } from "@/lib/constants";
 import { authorizeMcpRequest } from "@/lib/mcp/auth";
 import { buildToolResult } from "@/lib/mcp/envelope";
+import { logMcpRequest } from "@/lib/mcp/logging";
 import { buscarProductosMock } from "@/lib/mcp/search";
 
 export const runtime = "nodejs";
@@ -104,24 +106,54 @@ const baseHandler = createMcpHandler(
       buscarProductosShape,
       (args) => {
         const startedAt = Date.now();
-        const resultado = buscarProductosMock(args);
-        const hayResultados = resultado.total > 0;
+        try {
+          const resultado = buscarProductosMock(args);
+          const hayResultados = resultado.total > 0;
+          const finishedAt = Date.now();
 
-        return buildToolResult(
-          {
-            ok: true,
+          // Observe the call (M3). Fire-and-forget but guaranteed to land on
+          // Vercel; the agent never waits on it and a log failure can't fail
+          // the call. Wraps the call, not the data source, so M2's real
+          // searcher needs no change here.
+          logMcpRequest({
+            toolName: MCP_TOOL_NAME,
+            args,
             status: hayResultados
-              ? MCP_STATUS.SUCCESS
-              : MCP_STATUS.NEEDS_MORE_INFO,
-            data: resultado,
-            startedAt,
-            nextQuestion: hayResultados
-              ? undefined
-              : MCP_NO_RESULTS_NEXT_QUESTION,
-            isError: false,
-          },
-          Date.now(),
-        );
+              ? MCP_LOG_STATUS.SUCCESS
+              : MCP_LOG_STATUS.NO_RESULTS,
+            resultCount: resultado.total,
+            durationMs: Math.max(0, finishedAt - startedAt),
+          });
+
+          // Response contract is unchanged — logging only observes.
+          return buildToolResult(
+            {
+              ok: true,
+              status: hayResultados
+                ? MCP_STATUS.SUCCESS
+                : MCP_STATUS.NEEDS_MORE_INFO,
+              data: resultado,
+              startedAt,
+              nextQuestion: hayResultados
+                ? undefined
+                : MCP_NO_RESULTS_NEXT_QUESTION,
+              isError: false,
+            },
+            finishedAt,
+          );
+        } catch (err) {
+          // Log the failure, then re-throw so mcp-handler returns the exact
+          // same error response it would have. Observe, don't alter.
+          logMcpRequest({
+            toolName: MCP_TOOL_NAME,
+            args,
+            status: MCP_LOG_STATUS.ERROR,
+            resultCount: null,
+            durationMs: Math.max(0, Date.now() - startedAt),
+            errorMessage: err instanceof Error ? err.message : String(err),
+          });
+          throw err;
+        }
       },
     );
   },

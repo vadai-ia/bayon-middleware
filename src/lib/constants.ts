@@ -32,6 +32,24 @@ export const MCP_STATUS = {
 export const MCP_SAFETY_READ_ONLY = "read_only";
 
 /**
+ * Status vocabulary for the `mcp_request_logs.status` column (matches the DB
+ * CHECK constraint in 0001_init_mcp_request_logs.sql).
+ *
+ * This is DELIBERATELY distinct from MCP_STATUS above: MCP_STATUS is the
+ * agent-facing Whaapy envelope vocabulary (e.g. `needs_more_info`), while this
+ * is the internal analytics/log vocabulary the dashboard aggregates over (e.g.
+ * `no_results`). Logging maps envelope outcomes to these values; it never
+ * changes what the agent receives. `timeout` is reserved for M2 (external
+ * searcher exceeding its budget); the M1 mock only ever yields the first three.
+ */
+export const MCP_LOG_STATUS = {
+  SUCCESS: "success",
+  NO_RESULTS: "no_results",
+  ERROR: "error",
+  TIMEOUT: "timeout",
+} as const;
+
+/**
  * Headers Whaapy may use to send the MCP API key (spec: `api_key` or `bearer`).
  * We accept either; both carry the same shared secret (MCP_API_KEY).
  */
