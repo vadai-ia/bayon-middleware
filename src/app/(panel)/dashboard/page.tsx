@@ -1,5 +1,7 @@
 import { BarChart3 } from "lucide-react";
 
+import { BrandAccentBar } from "@/components/brand/brand-accent-bar";
+
 /**
  * Dashboard tab — PLACEHOLDER (M4). The real 8-metric business dashboard is M5;
  * this only reserves the tab inside the shared panel shell so M5 fills it in
@@ -9,9 +11,9 @@ export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-3">
-        <span
-          aria-hidden
-          className="w-1 shrink-0 self-stretch rounded-full bg-bayon-red"
+        <BrandAccentBar
+          orientation="vertical"
+          className="w-1.5 shrink-0 self-stretch rounded-full"
         />
         <div>
           <h1 className="font-serif text-2xl font-bold text-bayon-navy">

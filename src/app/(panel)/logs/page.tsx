@@ -1,3 +1,4 @@
+import { BrandAccentBar } from "@/components/brand/brand-accent-bar";
 import { LogsFilters } from "@/components/logs/logs-filters";
 import { LogsPagination } from "@/components/logs/logs-pagination";
 import { LogsTable } from "@/components/logs/logs-table";
@@ -51,9 +52,9 @@ export default async function LogsPage({
   return (
     <div className="flex flex-col gap-5">
       <div className="flex gap-3">
-        <span
-          aria-hidden
-          className="w-1 shrink-0 self-stretch rounded-full bg-bayon-red"
+        <BrandAccentBar
+          orientation="vertical"
+          className="w-1.5 shrink-0 self-stretch rounded-full"
         />
         <div>
           <h1 className="font-serif text-2xl font-bold text-bayon-navy">Logs</h1>
