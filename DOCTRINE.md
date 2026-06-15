@@ -83,7 +83,7 @@ Parameters the agent can send (all optional except `query`):
 | `ancho_max` | Maximum width in cm |
 | `precio_max` | Maximum price in MXN including IVA |
 
-No results → respond with a suggested follow-up question in Spanish.
+No results → return `status: needs_more_info` with a short, generic `nextQuestion` in Spanish (the standard Whaapy protocol field). The Whaapy agent owns the conversation; the middleware only populates that protocol field — it does NOT generate elaborate conversational suggestions.
 
 ## Web panel
 

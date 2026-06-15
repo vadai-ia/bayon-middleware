@@ -7,20 +7,24 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "test:supabase": "node --env-file=.env.local scripts/test-supabase.mjs"
+    "test:supabase": "node --env-file=.env.local scripts/test-supabase.mjs",
+    "test:mcp": "node --env-file=.env.local scripts/test-mcp.mjs"
   },
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0",
     "@radix-ui/react-slot": "^1.2.5",
     "@supabase/ssr": "^0.5.2",
     "@supabase/supabase-js": "^2.108.1",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.468.0",
+    "mcp-handler": "^1.1.0",
     "next": "14.2.35",
     "react": "^18",
     "react-dom": "^18",
     "tailwind-merge": "^2.6.1",
-    "tailwindcss-animate": "^1.0.7"
+    "tailwindcss-animate": "^1.0.7",
+    "zod": "^3.25.76"
   },
   "devDependencies": {
     "@types/node": "^20",

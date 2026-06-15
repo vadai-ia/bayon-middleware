@@ -86,3 +86,19 @@ Read this before writing code. Add every new error you encounter before committi
 **What happened (this project, M0):** the repo already contained `CLAUDE.md`, `DOCTRINE.md`, `ERRORES.md`, `MILESTONES.md` and `.claude/`, so `create-next-app@14 .` aborted with "directory contains files that could conflict".
 
 **How to avoid it:** scaffold into a temp subdir (a name not starting with `_`/`.`, due to npm naming rules) and move the generated files up into the repo root, dropping the subdir's auto-created `.git`. Then `git init` once at the root.
+
+---
+
+## 11. Route-segment `maxDuration` must be a literal, not an imported constant (M1)
+
+**What happened (this project, M1):** `export const maxDuration = MCP_MAX_DURATION_SECONDS;` in `app/api/mcp/route.ts` made `next build` warn `Unknown identifier "MCP_MAX_DURATION_SECONDS" at "maxDuration". The default config will be used instead.` Next statically analyzes route-segment config exports at build time and cannot resolve imports — so the centralized constant was silently ignored and the default (no limit) would have applied.
+
+**How to avoid it:** route-segment config (`maxDuration`, `revalidate`, `dynamic`, `runtime`, …) must be inline literals: `export const maxDuration = 30;`. If you also need the value at runtime (e.g. to pass into a library config), keep the centralized constant for that runtime use and mirror it as a literal in the segment export, with a comment noting they must stay in sync.
+
+---
+
+## 12. Strict TS: MCP tool callback return type needs an index signature (M1)
+
+**What happened (this project, M1):** the `@modelcontextprotocol/sdk` `server.tool(...)` callback expects a return assignable to `CallToolResult`, whose type includes an index signature (`[x: string]: unknown`, for `_meta`/`structuredContent`). A narrow helper interface (`{ content: {type:"text";text:string}[]; isError: boolean }`) failed `next build` with "Index signature for type 'string' is missing in type 'ToolResult'". Dev did not surface it (ERRORES.md #5).
+
+**How to avoid it:** the tool-result helper type must add `[key: string]: unknown;` so it stays structurally assignable to the SDK's `CallToolResult` (or import the SDK type directly). Do NOT cast with `any` (CLAUDE.md). Note: Streamable HTTP responses come back SSE-framed (`content-type: text/event-stream`, `event: message\ndata: {…}`) even when `Accept` includes `application/json` — this is correct; Whaapy sends `Accept: application/json, text/event-stream` and parses it.

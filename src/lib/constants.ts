@@ -7,8 +7,52 @@ export const TABLES = {
   MCP_REQUEST_LOGS: "mcp_request_logs",
 } as const;
 
-/** The single MCP tool exposed to Whaapy (read-only). Implemented in M1. */
+/** The single MCP tool exposed to Whaapy (read-only). */
 export const MCP_TOOL_NAME = "buscar_productos";
+
+/** MCP server identity, reported in the `initialize` handshake (Whaapy spec). */
+export const MCP_SERVER_INFO = {
+  name: "bayon-middleware-mcp",
+  version: "1.0.0",
+} as const;
+
+/**
+ * Business status values for the response envelope (Whaapy MCP spec).
+ * The spec defines exactly these; do not invent new ones.
+ */
+export const MCP_STATUS = {
+  SUCCESS: "success",
+  FAILED: "failed",
+  NEEDS_MORE_INFO: "needs_more_info",
+  PENDING_CONFIRMATION: "pending_confirmation",
+  QUEUED: "queued",
+} as const;
+
+/** Operation-risk class reported in the envelope. This tool only ever reads. */
+export const MCP_SAFETY_READ_ONLY = "read_only";
+
+/**
+ * Headers Whaapy may use to send the MCP API key (spec: `api_key` or `bearer`).
+ * We accept either; both carry the same shared secret (MCP_API_KEY).
+ */
+export const MCP_AUTH_HEADERS = {
+  API_KEY: "x-api-key",
+  AUTHORIZATION: "authorization",
+} as const;
+
+/** Prices the tool deals with are MXN including IVA (closed decision). */
+export const CURRENCY = "MXN" as const;
+
+/**
+ * Generic, short clarifying hint returned (as the spec's `nextQuestion`) when a
+ * search yields no results. Intentionally minimal — the Whaapy agent owns the
+ * conversation; we only populate the protocol's standard field.
+ */
+export const MCP_NO_RESULTS_NEXT_QUESTION =
+  "¿La buscas para cortina, tapicería o vestir?";
+
+/** MCP request maxDuration (seconds). Aligns with Whaapy's tools/call timeout. */
+export const MCP_MAX_DURATION_SECONDS = 30;
 
 /** App routes. */
 export const ROUTES = {
