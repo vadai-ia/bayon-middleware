@@ -28,8 +28,8 @@ import type { LabelCount } from "@/lib/dashboard/types";
  * to the client chart islands (ERRORES.md #9 — no service role in the bundle,
  * #6). Always live, never cached.
  *
- * Visual weight follows the brief: unmet demand and most-searched terms are the
- * most prominent; the rest follow.
+ * Visual weight follows the brief: most-searched terms first, then unmet demand
+ * — both prominent; the rest follow.
  */
 export const dynamic = "force-dynamic";
 
@@ -81,7 +81,7 @@ export default async function DashboardPage({
               Dashboard
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
-              Qué buscan los clientes de Telas Bayón y qué no encontramos.
+              Qué buscan los clientes de Telas Bayón.
             </p>
           </div>
         </div>
@@ -91,7 +91,24 @@ export default async function DashboardPage({
       {/* Headline KPIs */}
       <KpiCards summary={data.summary} />
 
-      {/* 1 — Unmet demand (most prominent) */}
+      {/* 1 — Most-searched terms (most prominent) */}
+      <DashboardCard
+        title="Términos más buscados"
+        description="Lo que los clientes piden con más frecuencia."
+        prominent
+      >
+        {chartOrEmpty(
+          topTerms,
+          <RankingBarChart
+            data={topTerms}
+            ariaLabel="Ranking de términos más buscados"
+            height={280}
+          />,
+          240
+        )}
+      </DashboardCard>
+
+      {/* 2 — Unmet demand (prominent) */}
       <DashboardCard
         title="Demanda no satisfecha"
         description="Búsquedas que no encontraron nada. La métrica más accionable: dice qué conviene tener en stock."
@@ -139,23 +156,6 @@ export default async function DashboardPage({
             )}
           </div>
         </div>
-      </DashboardCard>
-
-      {/* 2 — Most-searched terms (prominent) */}
-      <DashboardCard
-        title="Términos más buscados"
-        description="Lo que los clientes piden con más frecuencia."
-        prominent
-      >
-        {chartOrEmpty(
-          topTerms,
-          <RankingBarChart
-            data={topTerms}
-            ariaLabel="Ranking de términos más buscados"
-            height={280}
-          />,
-          240
-        )}
       </DashboardCard>
 
       {/* 3 & 4 — Colors and collections */}

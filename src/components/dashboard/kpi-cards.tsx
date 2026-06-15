@@ -6,6 +6,12 @@ import type { DashboardSummary } from "@/lib/dashboard/types";
  * latency. Plain Server Component. No-results gets the red accent because it is
  * the demand-side signal Bayón acts on; color is paired with a label so it is
  * never the only cue.
+ *
+ * The total card's hint surfaces `errors`, which the summary RPC counts as
+ * `error` + `timeout` together (see dashboard_summary). It is labeled "con
+ * fallos" — NOT "con error" — so the KPI honestly reflects what it counts and
+ * stays consistent with the Logs tab, where `error` and `timeout` remain
+ * separate raw statuses.
  */
 export function KpiCards({ summary }: { summary: DashboardSummary }) {
   const { totalCalls, success, noResults, errors, avgDurationMs } = summary;
@@ -16,7 +22,7 @@ export function KpiCards({ summary }: { summary: DashboardSummary }) {
     {
       label: "Búsquedas totales",
       value: totalCalls.toLocaleString("es-MX"),
-      hint: errors > 0 ? `${errors} con error` : "en el periodo",
+      hint: errors > 0 ? `${errors} con fallos` : "en el periodo",
       accent: "navy" as const,
     },
     {
@@ -50,7 +56,7 @@ export function KpiCards({ summary }: { summary: DashboardSummary }) {
       {cards.map((card) => (
         <div
           key={card.label}
-          className="rounded-lg border border-bayon-navy/10 bg-white p-4"
+          className="rounded-lg border border-bayon-navy/10 bg-white p-4 shadow-sm"
         >
           <p className="text-xs font-medium text-muted-foreground">
             {card.label}

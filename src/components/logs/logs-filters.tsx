@@ -49,7 +49,7 @@ export function LogsFilters() {
   return (
     <form
       onSubmit={apply}
-      className="grid grid-cols-1 gap-3 rounded-lg border border-bayon-navy/10 bg-white p-4 sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
+      className="grid grid-cols-1 gap-3 rounded-lg border border-bayon-navy/10 bg-white p-4 shadow-sm sm:grid-cols-2 lg:grid-cols-5 lg:items-end"
     >
       <label className="flex flex-col gap-1.5 lg:col-span-2">
         <span className="text-xs font-medium text-bayon-navy">

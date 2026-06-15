@@ -48,7 +48,7 @@ function Field({
   );
 }
 
-function LogRow({ row }: { row: McpRequestLogRow }) {
+function LogRow({ row, zebra }: { row: McpRequestLogRow; zebra: boolean }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -58,7 +58,16 @@ function LogRow({ row }: { row: McpRequestLogRow }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
-          "grid w-full grid-cols-1 gap-2 px-4 py-3 text-left transition-colors cursor-pointer hover:bg-bayon-navy/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-bayon-blue/50",
+          "grid w-full grid-cols-1 gap-2 px-4 py-3 text-left transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-bayon-blue/50",
+          // Zebra striping: alternate rows carry a faint navy tint over white so
+          // the table reads less flat and rows are easier to track across. The
+          // hover lands one step darker than either band so it stays visible on
+          // both. Open rows keep the tint regardless of band.
+          open
+            ? "bg-bayon-navy/[0.04]"
+            : zebra
+              ? "bg-bayon-navy/[0.025] hover:bg-bayon-navy/[0.06]"
+              : "bg-white hover:bg-bayon-navy/[0.06]",
           GRID_COLS,
           "lg:items-center lg:gap-3"
         )}
@@ -151,7 +160,7 @@ export function LogsTable({
   hasFilters: boolean;
 }) {
   return (
-    <div className="overflow-x-auto rounded-lg border border-bayon-navy/10 bg-white">
+    <div className="overflow-x-auto rounded-lg border border-bayon-navy/10 bg-white shadow-sm">
       {/* Desktop column header */}
       <div
         className={cn(
@@ -175,7 +184,9 @@ export function LogsTable({
       {rows.length === 0 ? (
         <EmptyState hasFilters={hasFilters} />
       ) : (
-        rows.map((row) => <LogRow key={row.id} row={row} />)
+        rows.map((row, idx) => (
+          <LogRow key={row.id} row={row} zebra={idx % 2 === 1} />
+        ))
       )}
     </div>
   );

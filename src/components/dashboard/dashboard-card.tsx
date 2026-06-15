@@ -4,9 +4,10 @@ import { cn } from "@/lib/utils";
 /**
  * Titled card wrapper for a dashboard metric. Plain Server Component — pure
  * layout, no data. Serif title + clean sans description, consistent with the M4
- * panel. `prominent` cards (unmet demand, most-searched terms) get a heavier
- * border, a subtle shadow and the four-color brand stripe to pull visual weight,
- * matching the priority hierarchy in the M5 brief.
+ * panel. `prominent` cards (most-searched terms, unmet demand) get a heavier
+ * border, a stronger shadow and the four-color brand stripe to pull visual
+ * weight, matching the priority hierarchy in the M5 brief. Every card carries at
+ * least a soft shadow so the white surface lifts off the tinted panel canvas.
  */
 export function DashboardCard({
   title,
@@ -26,8 +27,8 @@ export function DashboardCard({
       className={cn(
         "rounded-lg border bg-white p-4 sm:p-5",
         prominent
-          ? "border-bayon-navy/20 shadow-sm"
-          : "border-bayon-navy/10",
+          ? "border-bayon-navy/20 shadow-md"
+          : "border-bayon-navy/10 shadow-sm",
         className
       )}
     >

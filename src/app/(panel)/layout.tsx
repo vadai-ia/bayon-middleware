@@ -42,7 +42,12 @@ export default async function PanelLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
+    // Subtle brand-tinted canvas (cool blue → faint navy, both very low alpha,
+    // never saturated). White cards and the white logs table lift off it so the
+    // panel reads with depth instead of white-on-white. Shared by /logs and
+    // /dashboard for one consistent treatment; the header below stays solid
+    // white. Login is a separate route group and is untouched.
+    <div className="flex min-h-screen flex-col bg-gradient-to-b from-bayon-blue/[0.06] to-bayon-navy/[0.03]">
       {/* Full-bleed four-color brand ribbon anchoring the top of the panel —
           a deliberate masthead element (mirrors the login's bottom footer bar). */}
       <BrandAccentBar className="h-1.5 w-full" />
