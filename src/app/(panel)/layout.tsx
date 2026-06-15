@@ -42,8 +42,12 @@ export default async function PanelLayout({
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-white">
-      <BrandAccentBar />
+    <div className="flex min-h-screen flex-col bg-white pl-3 sm:pl-4">
+      {/* Far-left full-height brand stripe (fixed so it spans the viewport). */}
+      <BrandAccentBar
+        orientation="vertical"
+        className="fixed inset-y-0 left-0 z-50 w-2"
+      />
       <header className="border-b border-bayon-navy/10 bg-white">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           <div className="flex items-center justify-between gap-4">

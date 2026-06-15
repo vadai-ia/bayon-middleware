@@ -33,17 +33,17 @@ export default async function LoginPage() {
           </p>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-bayon-navy/10 bg-white shadow-sm">
-          <BrandAccentBar />
-          <div className="p-6">
-            <LoginForm />
-          </div>
+        <div className="rounded-lg border border-bayon-navy/10 bg-white p-6 shadow-sm">
+          <LoginForm />
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
           Telas Bayón · Hecho por VADAI
         </p>
       </div>
+
+      {/* Wide brand footer pinned to the very bottom of the page. */}
+      <BrandAccentBar className="fixed bottom-0 left-0 h-2 w-full" />
     </main>
   );
 }
