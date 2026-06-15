@@ -55,7 +55,7 @@ export default async function PanelLayout({
                 type="submit"
                 variant="outline"
                 size="sm"
-                className="border-bayon-navy/20 text-bayon-navy hover:bg-bayon-navy/5"
+                className="h-11 border-bayon-navy/20 text-bayon-navy hover:bg-bayon-navy/5"
               >
                 Salir
               </Button>

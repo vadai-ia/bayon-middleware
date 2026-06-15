@@ -11,7 +11,7 @@ import {
 } from "@/lib/constants";
 
 const INPUT_CLASS =
-  "h-10 rounded-md border border-bayon-navy/20 bg-white px-3 text-sm text-black outline-none transition-colors focus:border-bayon-blue focus:ring-2 focus:ring-bayon-blue/30";
+  "h-10 rounded-md border border-bayon-navy/20 bg-white px-3 text-sm text-black outline-none transition-colors focus:border-bayon-blue focus:ring-2 focus:ring-bayon-blue/50";
 
 /**
  * Logs filter bar. Filters live in the URL search params so the Server Component

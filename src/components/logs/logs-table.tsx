@@ -15,7 +15,7 @@ import type { McpRequestLogRow } from "@/lib/logs/types";
 import { cn } from "@/lib/utils";
 
 const GRID_COLS =
-  "md:grid-cols-[155px_120px_130px_minmax(120px,1fr)_100px_120px_90px_80px_28px]";
+  "lg:grid-cols-[155px_120px_130px_minmax(120px,1fr)_100px_120px_90px_80px_28px]";
 
 const HEADERS = [
   "Fecha y hora",
@@ -39,8 +39,8 @@ function Field({
   className?: string;
 }) {
   return (
-    <div className={cn("flex items-center justify-between gap-2 md:block", className)}>
-      <span className="text-xs font-medium text-bayon-blue md:hidden">
+    <div className={cn("flex items-center justify-between gap-2 lg:block", className)}>
+      <span className="text-xs font-medium text-bayon-blue lg:hidden">
         {label}
       </span>
       <span className="text-sm text-black">{children}</span>
@@ -58,9 +58,9 @@ function LogRow({ row }: { row: McpRequestLogRow }) {
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         className={cn(
-          "grid w-full grid-cols-1 gap-2 px-4 py-3 text-left transition-colors hover:bg-bayon-navy/[0.03]",
+          "grid w-full grid-cols-1 gap-2 px-4 py-3 text-left transition-colors cursor-pointer hover:bg-bayon-navy/[0.03] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-bayon-blue/50",
           GRID_COLS,
-          "md:items-center md:gap-3"
+          "lg:items-center lg:gap-3"
         )}
       >
         <Field label="Fecha y hora">
@@ -79,13 +79,13 @@ function LogRow({ row }: { row: McpRequestLogRow }) {
         </Field>
         <Field label="Color">{orDash(row.req_color)}</Field>
         <Field label="Colección">{orDash(row.req_coleccion)}</Field>
-        <Field label="Resultados" className="md:text-right">
+        <Field label="Resultados" className="lg:text-right">
           {formatCount(row.result_count)}
         </Field>
-        <Field label="Duración" className="md:text-right">
+        <Field label="Duración" className="lg:text-right">
           {formatDuration(row.duration_ms)}
         </Field>
-        <span className="hidden items-center justify-center text-bayon-navy/50 md:flex">
+        <span className="hidden items-center justify-center text-bayon-navy/50 lg:flex">
           {open ? (
             <ChevronDown className="h-4 w-4" />
           ) : (
@@ -151,11 +151,11 @@ export function LogsTable({
   hasFilters: boolean;
 }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-bayon-navy/10 bg-white">
+    <div className="overflow-x-auto rounded-lg border border-bayon-navy/10 bg-white">
       {/* Desktop column header */}
       <div
         className={cn(
-          "hidden gap-3 bg-bayon-navy px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white md:grid",
+          "hidden gap-3 bg-bayon-navy px-4 py-2.5 text-xs font-semibold uppercase tracking-wide text-white lg:grid",
           GRID_COLS
         )}
       >

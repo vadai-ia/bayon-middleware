@@ -50,7 +50,7 @@ export function LogsPagination({
           size="sm"
           disabled={page <= 1}
           onClick={() => goTo(page - 1)}
-          className="border-bayon-navy/20 text-bayon-navy hover:bg-bayon-navy/5"
+          className="h-11 sm:h-9 border-bayon-navy/20 text-bayon-navy hover:bg-bayon-navy/5"
         >
           Anterior
         </Button>
@@ -63,7 +63,7 @@ export function LogsPagination({
           size="sm"
           disabled={page >= totalPages}
           onClick={() => goTo(page + 1)}
-          className="border-bayon-navy/20 text-bayon-navy hover:bg-bayon-navy/5"
+          className="h-11 sm:h-9 border-bayon-navy/20 text-bayon-navy hover:bg-bayon-navy/5"
         >
           Siguiente
         </Button>

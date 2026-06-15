@@ -24,7 +24,7 @@ export function PanelNav() {
             href={tab.href}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              "inline-flex min-h-11 items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors sm:min-h-9",
               isActive
                 ? "bg-bayon-navy text-white"
                 : "text-bayon-navy hover:bg-bayon-navy/5"

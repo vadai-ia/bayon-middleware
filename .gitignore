@@ -34,3 +34,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local agent/skill tooling (not project code)
+/.agent/
+/.claude/skills/
