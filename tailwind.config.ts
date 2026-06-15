@@ -9,7 +9,20 @@ const config: Config = {
   ],
   theme: {
     extend: {
+      fontFamily: {
+        // Serif for headings/titles — evokes Bayón's heritage ("Desde 1918").
+        // System serif stack: no Google-font network dependency at build time
+        // (ERRORES.md #5/#8 caution). Clean sans (Geist) stays the data font.
+        serif: ['Georgia', 'Cambria', '"Times New Roman"', "Times", "serif"],
+      },
       colors: {
+        // Telas Bayón brand palette (used over a white base — never saturated).
+        bayon: {
+          navy: "#24336A", // primary: headers, sidebar, primary text
+          blue: "#42619A", // secondary / interactive, hover states
+          red: "#D60F3A", // primary actions, alerts, accents
+          yellow: "#F8D927", // punctual highlights, accents
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",

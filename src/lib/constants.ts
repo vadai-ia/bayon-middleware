@@ -83,3 +83,40 @@ export const ROUTES = {
 
 /** Public routes that the auth middleware must never gate. */
 export const PUBLIC_ROUTES = [ROUTES.HOME, ROUTES.LOGIN] as const;
+
+// =============================================================================
+// Panel (M4)
+// =============================================================================
+
+/** Top-level panel navigation tabs. Order = display order. */
+export const PANEL_NAV = [
+  { href: ROUTES.LOGS, label: "Logs" },
+  { href: ROUTES.DASHBOARD, label: "Dashboard" },
+] as const;
+
+/** Rows per page in the Logs tab (server-side pagination). */
+export const LOGS_PAGE_SIZE = 20;
+
+/**
+ * Human (Spanish) labels for each `mcp_request_logs.status` value. Keyed by the
+ * DB CHECK vocabulary (MCP_LOG_STATUS), NOT the Whaapy envelope vocabulary
+ * (ERRORES.md #14). This is still the RAW technical view — labels are short
+ * status names, not business translations (that's M5's job).
+ */
+export const LOG_STATUS_LABELS: Record<
+  (typeof MCP_LOG_STATUS)[keyof typeof MCP_LOG_STATUS],
+  string
+> = {
+  [MCP_LOG_STATUS.SUCCESS]: "Éxito",
+  [MCP_LOG_STATUS.NO_RESULTS]: "Sin resultados",
+  [MCP_LOG_STATUS.ERROR]: "Error",
+  [MCP_LOG_STATUS.TIMEOUT]: "Timeout",
+};
+
+/** Status options for the Logs filter dropdown (in display order). */
+export const LOG_STATUS_OPTIONS = [
+  MCP_LOG_STATUS.SUCCESS,
+  MCP_LOG_STATUS.NO_RESULTS,
+  MCP_LOG_STATUS.ERROR,
+  MCP_LOG_STATUS.TIMEOUT,
+] as const;

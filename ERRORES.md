@@ -118,3 +118,11 @@ Read this before writing code. Add every new error you encounter before committi
 **What happened (this project, M3):** the response envelope uses the Whaapy spec status values (`success`, `needs_more_info`, …) while the `mcp_request_logs.status` column has its own CHECK constraint (`success | no_results | error | timeout`) chosen for analytics. A "no results" call is `needs_more_info` to the agent but `no_results` in the log — these are deliberately different, NOT a bug to reconcile. Blindly writing the envelope status into the column would violate the CHECK (`needs_more_info` is not allowed) and corrupt the dashboard's vocabulary.
 
 **How to avoid it:** keep them separate. `MCP_STATUS` (constants.ts) is the agent-facing envelope vocabulary; `MCP_LOG_STATUS` is the internal analytics/log vocabulary that matches the DB CHECK. Logging MAPS one outcome to the other (results>0 → `success`, results=0 → `no_results`, thrown → `error`); it never changes what the agent receives. Do not "fix" the mismatch by unifying them.
+
+---
+
+## 15. The `server-only` package is not resolvable from the project root (M4)
+
+**What happened (this project, M4):** to harden the panel's logs read path against accidentally landing in the browser bundle, I added `import "server-only";` to `lib/logs/queries.ts`. `server-only` is a transitive dependency of `next` (pinned `0.0.1`) but it is NOT hoisted to the top-level `node_modules`, so it does not resolve from our own source (`require.resolve('server-only')` throws; no `node_modules/server-only` dir). Relying on it would risk a build break — and it isn't a declared dependency of ours.
+
+**How to avoid it:** don't import `server-only` unless you add it to `package.json` explicitly. It's also redundant here: a module that imports the server Supabase client (which uses `next/headers`) already cannot be pulled into a Client Component — Next.js fails the build if a `'use client'` file transitively imports `next/headers`. That import chain is the real browser-bundle guard for the panel's server-side reads (complements the service-role rule, ERRORES.md #6). If you ever do want the explicit `server-only` marker, `npm install server-only` first.
