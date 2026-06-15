@@ -1,0 +1,8 @@
+{
+    "mcpServers": {
+        "whaapy-docs": {
+            "type": "sse",
+            "url": "https://docs.whaapy.com/mcp"
+        }
+    }
+}
