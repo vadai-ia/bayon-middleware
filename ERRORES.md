@@ -126,3 +126,19 @@ Read this before writing code. Add every new error you encounter before committi
 **What happened (this project, M4):** to harden the panel's logs read path against accidentally landing in the browser bundle, I added `import "server-only";` to `lib/logs/queries.ts`. `server-only` is a transitive dependency of `next` (pinned `0.0.1`) but it is NOT hoisted to the top-level `node_modules`, so it does not resolve from our own source (`require.resolve('server-only')` throws; no `node_modules/server-only` dir). Relying on it would risk a build break — and it isn't a declared dependency of ours.
 
 **How to avoid it:** don't import `server-only` unless you add it to `package.json` explicitly. It's also redundant here: a module that imports the server Supabase client (which uses `next/headers`) already cannot be pulled into a Client Component — Next.js fails the build if a `'use client'` file transitively imports `next/headers`. That import chain is the real browser-bundle guard for the panel's server-side reads (complements the service-role rule, ERRORES.md #6). If you ever do want the explicit `server-only` marker, `npm install server-only` first.
+
+---
+
+## 16. Recharts forces a Server/Client split; pass pre-aggregated data, not the client (M5)
+
+**Risk for this project (M5):** Recharts is a client-only library (it uses React context, refs and `ResponsiveContainer`'s DOM measurement). A chart component without `'use client'` fails to render in a Server Component, and the instinct to "just make the page a Client Component so the charts work" is the trap — that would force the dashboard's Supabase read (service role / `next/headers`) toward the client and break the M0 security model (ERRORES.md #6) and the build (ERRORES.md #9, #15).
+
+**How to avoid it:** keep the data path and the chart path on opposite sides of the boundary. The Dashboard page stays a Server Component: it aggregates in Postgres via the user-scoped client (`lib/dashboard/queries.ts`, which imports `next/headers`) and passes ONLY plain serializable arrays/objects as props into small `'use client'` Recharts islands (`components/dashboard/*`). Shared chart constants (`lib/dashboard/chart-theme.ts`) are pure values with no `'use client'`, so both sides may import them. The charts never fetch; the server never imports Recharts.
+
+---
+
+## 17. PostgREST serializes `bigint`/`numeric` as JSON strings, not numbers (M5)
+
+**What happened (this project, M5):** the dashboard aggregation functions return `count(*)` (`bigint`) and `round(avg(...),0)` (`numeric`). PostgREST (Supabase `rpc`) serializes those SQL types as JSON **strings** (e.g. `"42"`), to avoid precision loss — not as JS numbers. Feeding a string straight into Recharts or arithmetic silently misbehaves (string concatenation, broken axis scaling) and TypeScript typed as `number` would be lying. The dev server can mask it (some paths coerce), mirroring ERRORES.md #5.
+
+**How to avoid it:** coerce every numeric RPC field at the data-layer boundary. `lib/dashboard/queries.ts` runs all aggregate fields through `num()` / `numOrNull()` (`Number(...)` with a finite check) before building the typed `DashboardData`, so the rest of the app sees real `number`s. Never assume an `rpc()` count/avg is already a number.

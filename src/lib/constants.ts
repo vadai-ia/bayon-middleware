@@ -120,3 +120,58 @@ export const LOG_STATUS_OPTIONS = [
   MCP_LOG_STATUS.ERROR,
   MCP_LOG_STATUS.TIMEOUT,
 ] as const;
+
+// =============================================================================
+// Dashboard (M5)
+// =============================================================================
+
+/** Names of the SQL aggregation functions (RPC) added in migration 0002. */
+export const DASHBOARD_RPC = {
+  SUMMARY: "dashboard_summary",
+  TERM_COUNTS: "dashboard_term_counts",
+  COLOR_COUNTS: "dashboard_color_counts",
+  COLLECTION_COUNTS: "dashboard_collection_counts",
+  ATTRIBUTE_COUNTS: "dashboard_attribute_counts",
+  WIDTH_BUCKETS: "dashboard_width_buckets",
+  ACTIVITY_HOURLY: "dashboard_activity_hourly",
+  ACTIVITY_WEEKDAY: "dashboard_activity_weekday",
+  STOCK_SUMMARY: "dashboard_stock_summary",
+} as const;
+
+/** Whitelisted technical-attribute keys read from the arguments jsonb (Q8). */
+export const ATTRIBUTE_KEYS = {
+  TIPO_DE_TELA: "tipo_de_tela",
+  ESTILO: "estilo",
+  COMPOSICION: "composicion",
+} as const;
+
+/** Default number of rows shown in each ranking chart. */
+export const DASHBOARD_RANKING_LIMIT = 8;
+
+/**
+ * Date-range presets for the dashboard. `days = null` means "all time".
+ * Order = display order. Default is 90 days (covers the M5 seed window).
+ */
+export const DASHBOARD_RANGES = [
+  { key: "7", label: "7 días", days: 7 },
+  { key: "30", label: "30 días", days: 30 },
+  { key: "90", label: "90 días", days: 90 },
+  { key: "all", label: "Todo", days: null },
+] as const;
+
+/** Default range when none is supplied in the URL. */
+export const DASHBOARD_DEFAULT_RANGE = "90" as const;
+
+/**
+ * Weekday labels indexed by Postgres `dow` (0 = Sunday … 6 = Saturday).
+ * Spanish, short form, for the activity-by-weekday chart.
+ */
+export const WEEKDAY_LABELS = [
+  "Dom",
+  "Lun",
+  "Mar",
+  "Mié",
+  "Jue",
+  "Vie",
+  "Sáb",
+] as const;
