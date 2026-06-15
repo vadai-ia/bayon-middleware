@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { BayonLogo } from "@/components/brand/bayon-logo";
+import { BrandAccentBar } from "@/components/brand/brand-accent-bar";
 import { LoginForm } from "@/components/auth/login-form";
 import { ROUTES } from "@/lib/constants";
 import { createClient } from "@/lib/supabase/server";
@@ -32,8 +33,11 @@ export default async function LoginPage() {
           </p>
         </div>
 
-        <div className="rounded-lg border border-bayon-navy/10 bg-white p-6 shadow-sm">
-          <LoginForm />
+        <div className="overflow-hidden rounded-lg border border-bayon-navy/10 bg-white shadow-sm">
+          <BrandAccentBar />
+          <div className="p-6">
+            <LoginForm />
+          </div>
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">

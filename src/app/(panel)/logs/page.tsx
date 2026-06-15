@@ -50,11 +50,17 @@ export default async function LogsPage({
 
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="font-serif text-2xl font-bold text-bayon-navy">Logs</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Registro en bruto de cada solicitud del agente al middleware.
-        </p>
+      <div className="flex gap-3">
+        <span
+          aria-hidden
+          className="w-1 shrink-0 self-stretch rounded-full bg-bayon-red"
+        />
+        <div>
+          <h1 className="font-serif text-2xl font-bold text-bayon-navy">Logs</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Registro en bruto de cada solicitud del agente al middleware.
+          </p>
+        </div>
       </div>
 
       <LogsFilters />

@@ -8,13 +8,19 @@ import { BarChart3 } from "lucide-react";
 export default function DashboardPage() {
   return (
     <div className="flex flex-col gap-5">
-      <div>
-        <h1 className="font-serif text-2xl font-bold text-bayon-navy">
-          Dashboard
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Métricas de negocio de las búsquedas.
-        </p>
+      <div className="flex gap-3">
+        <span
+          aria-hidden
+          className="w-1 shrink-0 self-stretch rounded-full bg-bayon-red"
+        />
+        <div>
+          <h1 className="font-serif text-2xl font-bold text-bayon-navy">
+            Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Métricas de negocio de las búsquedas.
+          </p>
+        </div>
       </div>
 
       <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-dashed border-bayon-navy/20 bg-white px-6 py-20 text-center">

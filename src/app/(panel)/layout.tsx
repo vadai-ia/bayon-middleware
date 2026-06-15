@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 
 import { BayonLogo } from "@/components/brand/bayon-logo";
+import { BrandAccentBar } from "@/components/brand/brand-accent-bar";
 import { PanelNav } from "@/components/panel/panel-nav";
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
@@ -42,6 +43,7 @@ export default async function PanelLayout({
 
   return (
     <div className="flex min-h-screen flex-col bg-white">
+      <BrandAccentBar />
       <header className="border-b border-bayon-navy/10 bg-white">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
           <div className="flex items-center justify-between gap-4">
