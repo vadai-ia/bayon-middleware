@@ -39,7 +39,7 @@ if (countError) {
 const { data, error } = await supabase
   .from("mcp_request_logs")
   .select(
-    "created_at, tool_name, status, result_count, duration_ms, norm_query, req_color, req_coleccion, error_message, arguments",
+    "created_at, tool_name, status, result_count, duration_ms, norm_query, req_color, req_coleccion, in_stock_count, out_of_stock_count, error_message, arguments",
   )
   .order("created_at", { ascending: false })
   .limit(limit);
@@ -56,7 +56,10 @@ console.log(`Latest ${data.length} row(s):\n`);
 for (const row of data) {
   console.log(`• ${row.created_at}  [${row.status}]  tool=${row.tool_name}`);
   console.log(
-    `    result_count=${row.result_count}  duration_ms=${row.duration_ms}`,
+    `    result_count=${row.result_count}  duration_ms=${row.duration_ms}` +
+      `  in_stock=${JSON.stringify(row.in_stock_count)}  out_of_stock=${JSON.stringify(
+        row.out_of_stock_count,
+      )}`,
   );
   console.log(
     `    norm_query=${JSON.stringify(row.norm_query)}  req_color=${JSON.stringify(

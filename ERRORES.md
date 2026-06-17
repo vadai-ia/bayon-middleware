@@ -142,3 +142,27 @@ Read this before writing code. Add every new error you encounter before committi
 **What happened (this project, M5):** the dashboard aggregation functions return `count(*)` (`bigint`) and `round(avg(...),0)` (`numeric`). PostgREST (Supabase `rpc`) serializes those SQL types as JSON **strings** (e.g. `"42"`), to avoid precision loss — not as JS numbers. Feeding a string straight into Recharts or arithmetic silently misbehaves (string concatenation, broken axis scaling) and TypeScript typed as `number` would be lying. The dev server can mask it (some paths coerce), mirroring ERRORES.md #5.
 
 **How to avoid it:** coerce every numeric RPC field at the data-layer boundary. `lib/dashboard/queries.ts` runs all aggregate fields through `num()` / `numOrNull()` (`Number(...)` with a finite check) before building the typed `DashboardData`, so the rest of the app sees real `number`s. Never assume an `rpc()` count/avg is already a number.
+
+---
+
+## 18. Data Gateway `collections` is a comma-joined blob, unusable as an exact filter (M2)
+
+**What happened (this project, M2):** the brief listed `coleccion` as a "real filter". But probing the live Data Gateway showed the `collections` field is a single comma-joined string per variant (e.g. `"Linos, Telas, Vestir, AVADA - Best Sellers"`), and the only operator the compiled `search_variant` tool exposes for it is exact `eq`. So `collections="Vestir"` and `collections="Telas"` both returned **0 results** — `eq` compares the whole string. As a hard filter, `coleccion` would zero out almost every real search. There is no `in`/`contains` operator in the published schema.
+
+**How to avoid it:** do NOT send `coleccion` as a Data Gateway filter. Fold it into the free-text `query` (collections IS reachable via the hybrid/semantic search), exactly like the other unsupported params (`tipo_de_tela`, `estilo`, `composicion`, `ancho`). This overrode the "coleccion is a real filter" closed decision after confirming with the user (CLAUDE.md rule #5). We still log `req_coleccion` (normalized from the original arg) so the dashboard's collection metrics keep working. Revisit only if the programmer later exposes a contains/`in` operator on `collections`.
+
+---
+
+## 19. Data Gateway `color` filter is exact `eq` — case- AND accent-sensitive, and the body must be UTF-8 (M2)
+
+**What happened (this project, M2):** the `color` filter matches by exact `eq` against the catalog's literal value. `color="Negro"` returned results; `color="negro"` returned **0**. This directly breaks M1's normalization instinct (lowercase + strip accents): a lowercased/de-accented color never matches. Separately, when probing from the shell, `color="Café"` returned 0 until the request body was sent as real UTF-8 — a mangled `é` silently became a non-matching value.
+
+**How to avoid it:** the color refinement (`lib/mcp/afinar-query.ts`) must output the catalog's CANONICAL casing/accents (`Negro`, `Café`, `Beige`, `Vino`, `Azul Marino`, …), not a normalized form. Normalize the INPUT only as a lookup key into the canonical color map; send the canonical value. The old M1 map (`beige→Arena`, `café→Chocolate`) targeted values this catalog doesn't use — replaced with the real ones. The Gateway call uses `JSON.stringify` (emits UTF-8) so accented colors match; never hand-build the body with a non-UTF-8 encoding.
+
+---
+
+## 20. Data Gateway forces an `available = true` default filter we can't override (M2 stock branch)
+
+**What happened (this project, M2):** the dashboard's "unmet demand by stock" metric (M5 #5) needs to see out-of-stock variants. But the live `search_variant` tool always applies `{ field: "available", op: "eq", value: true }` (visible in the response's `applied_filters`), and it's a mapping `defaultFilter` — per the docs and confirmed live, defaults "cannot be overridden by the agent". Passing `available:false` was ignored (still `value:true`); `inventoryQuantity_max:0` returned 0 (the available filter is ANDed in). So out-of-stock variants are currently **unobservable**. Writing `out_of_stock_count = 0` would be misleading (it asserts "none were out of stock" when we simply can't see them).
+
+**How to avoid it:** detect the forced filter from the response's `applied_filters` (not a hardcoded assumption) and, while it's present, write `in_stock_count = out_of_stock_count = NULL` — the M5 aggregates already exclude null rows, so the stock metric degrades honestly to "no data yet" instead of a rosy 100%-in-stock donut. The derivation (`in = count(inventario>0)`, `out = count(≤0)`) is already wired; the moment the programmer disables the default filter, the counts populate with no code change. Do NOT block the rest of M2 on the stock metric.

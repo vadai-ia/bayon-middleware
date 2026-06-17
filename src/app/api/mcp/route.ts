@@ -21,14 +21,16 @@ import {
   MCP_LOG_STATUS,
   MCP_MAX_DURATION_SECONDS,
   MCP_NO_RESULTS_NEXT_QUESTION,
+  MCP_SEARCHER_FAILED_MESSAGE,
   MCP_SERVER_INFO,
   MCP_STATUS,
   MCP_TOOL_NAME,
 } from "@/lib/constants";
 import { authorizeMcpRequest } from "@/lib/mcp/auth";
+import { SearcherError } from "@/lib/mcp/data-gateway";
 import { buildToolResult } from "@/lib/mcp/envelope";
 import { logMcpRequest } from "@/lib/mcp/logging";
-import { buscarProductosMock } from "@/lib/mcp/search";
+import { buscarProductos } from "@/lib/mcp/search";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -43,7 +45,7 @@ export const maxDuration = 30;
  */
 const TOOL_DESCRIPTION = [
   "Busca telas en el catálogo de Telas Bayón por texto libre y filtros del catálogo.",
-  "Devuelve productos con color, tipo de tela, estilo, composición, ancho (cm) y precio (MXN con IVA).",
+  "Devuelve productos con SKU, nombre, color, colección, inventario y precio (MXN, el mismo de telasbayon.com).",
   "",
   "When to use: cuando el cliente pide telas o pregunta por disponibilidad, color, tipo, ancho o precio.",
   "Never use for: crear pedidos, modificar inventario o cualquier acción de escritura — esta herramienta es solo de lectura.",
@@ -95,7 +97,7 @@ const buscarProductosShape = {
     .number()
     .positive()
     .optional()
-    .describe("Precio máximo en MXN incluyendo IVA."),
+    .describe("Precio máximo en MXN (precio de venta, el mismo que muestra telasbayon.com)."),
 } as const;
 
 const baseHandler = createMcpHandler(
@@ -104,17 +106,17 @@ const baseHandler = createMcpHandler(
       MCP_TOOL_NAME,
       TOOL_DESCRIPTION,
       buscarProductosShape,
-      (args) => {
+      async (args) => {
         const startedAt = Date.now();
         try {
-          const resultado = buscarProductosMock(args);
+          // Real searcher (M2): refine → Data Gateway → mapped results + stock.
+          const { resultado, stock } = await buscarProductos(args);
           const hayResultados = resultado.total > 0;
           const finishedAt = Date.now();
 
           // Observe the call (M3). Fire-and-forget but guaranteed to land on
           // Vercel; the agent never waits on it and a log failure can't fail
-          // the call. Wraps the call, not the data source, so M2's real
-          // searcher needs no change here.
+          // the call. Now also carries the derived stock counts (M5 #5).
           logMcpRequest({
             toolName: MCP_TOOL_NAME,
             args,
@@ -123,6 +125,10 @@ const baseHandler = createMcpHandler(
               : MCP_LOG_STATUS.NO_RESULTS,
             resultCount: resultado.total,
             durationMs: Math.max(0, finishedAt - startedAt),
+            // No-results → 0/0; otherwise the derived counts (null while the
+            // Gateway forces available=true, so stockouts are unobservable).
+            inStockCount: hayResultados ? stock.inStock : 0,
+            outOfStockCount: hayResultados ? stock.outOfStock : 0,
           });
 
           // Response contract is unchanged — logging only observes.
@@ -142,14 +148,56 @@ const baseHandler = createMcpHandler(
             finishedAt,
           );
         } catch (err) {
-          // Log the failure, then re-throw so mcp-handler returns the exact
-          // same error response it would have. Observe, don't alter.
+          // A searcher timeout/failure must NOT hang or bubble as an unhandled
+          // error (ERRORES.md #7). Map it to a clean `failed` envelope with a
+          // Spanish message, and log it (timeout vs. error). Any other,
+          // unexpected error is logged and re-thrown so mcp-handler reports it.
+          const finishedAt = Date.now();
+          const durationMs = Math.max(0, finishedAt - startedAt);
+
+          if (err instanceof SearcherError) {
+            logMcpRequest({
+              toolName: MCP_TOOL_NAME,
+              args,
+              status:
+                err.kind === "timeout"
+                  ? MCP_LOG_STATUS.TIMEOUT
+                  : MCP_LOG_STATUS.ERROR,
+              resultCount: null,
+              durationMs,
+              inStockCount: null,
+              outOfStockCount: null,
+              errorMessage: err.message,
+            });
+
+            return buildToolResult(
+              {
+                ok: false,
+                status: MCP_STATUS.FAILED,
+                data: { productos: [], total: 0, filtros_aplicados: args },
+                startedAt,
+                errors: [
+                  {
+                    code: err.kind,
+                    message: err.message,
+                    message_es: MCP_SEARCHER_FAILED_MESSAGE,
+                    retryable: true,
+                  },
+                ],
+                isError: true,
+              },
+              finishedAt,
+            );
+          }
+
           logMcpRequest({
             toolName: MCP_TOOL_NAME,
             args,
             status: MCP_LOG_STATUS.ERROR,
             resultCount: null,
-            durationMs: Math.max(0, Date.now() - startedAt),
+            durationMs,
+            inStockCount: null,
+            outOfStockCount: null,
             errorMessage: err instanceof Error ? err.message : String(err),
           });
           throw err;

@@ -76,15 +76,22 @@ check(
     tool?.inputSchema?.properties?.precio_max?.type === "number",
 );
 
-// 2) tools/call — matching query
+// 2) tools/call — matching query (M2: hits the live Data Gateway).
+// Lowercase "negro" also verifies the color refinement maps it to the catalog's
+// canonical "Negro" before the Gateway's case-sensitive eq filter.
 const matchRes = await client.callTool({
   name: "buscar_productos",
-  arguments: { query: "percal", color: "Arena" },
+  arguments: { query: "tela", color: "negro" },
 });
 const matchEnv = parseEnvelope(matchRes);
 check("match: ok=true", matchEnv.ok === true);
 check("match: status=success", matchEnv.status === "success", matchEnv.status);
 check("match: returns products", matchEnv.data?.total > 0, `total=${matchEnv.data?.total}`);
+check(
+  "match: products carry sku + precio_mxn (real Gateway shape)",
+  matchEnv.data?.productos?.[0]?.sku !== undefined &&
+    typeof matchEnv.data?.productos?.[0]?.precio_mxn === "number",
+);
 check(
   "match: data.productos is a real array",
   Array.isArray(matchEnv.data?.productos),

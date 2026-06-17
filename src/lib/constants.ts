@@ -58,8 +58,50 @@ export const MCP_AUTH_HEADERS = {
   AUTHORIZATION: "authorization",
 } as const;
 
-/** Prices the tool deals with are MXN including IVA (closed decision). */
+/**
+ * Prices the tool deals with are MXN, taken exactly as the Data Gateway returns
+ * them — the same price shown on telasbayon.com (what the customer pays). No IVA
+ * math, no conversion (M2 closed decision). `precio_max` filters against it 1:1.
+ */
 export const CURRENCY = "MXN" as const;
+
+// =============================================================================
+// External searcher — Whaapy Data Gateway (M2)
+// =============================================================================
+
+/**
+ * Data Gateway integration (server-to-server REST). Base URL and key come from
+ * the env vars `BUSCADOR_EXTERNO_URL` / `BUSCADOR_EXTERNO_API_KEY`; the key is
+ * SERVER-ONLY and must never reach the client bundle (ERRORES.md #6).
+ *
+ * We call the `search_variant` compiled tool's invoke endpoint — it validates
+ * against the published schema and runs the same hybrid search as `/query`.
+ * Entity is `variant` (not `product`). The exact lookup tool
+ * (`check_availability_variant`) is intentionally NOT used in V1.
+ */
+export const DATA_GATEWAY = {
+  /** Path appended to BUSCADOR_EXTERNO_URL for the search invoke. */
+  SEARCH_PATH: "/tools/search_variant/invoke",
+} as const;
+
+/**
+ * Max results requested from the Data Gateway per call. Kept small so the
+ * agent's context and our logs stay lean — a handful, not the whole catalog.
+ */
+export const BUSCADOR_RESULT_LIMIT = 8;
+
+/**
+ * Time budget for the Data Gateway call (ms). Well under Whaapy's 30s
+ * tools/call limit (ERRORES.md #7); on timeout we return a clean failed status.
+ */
+export const BUSCADOR_TIMEOUT_MS = 20_000;
+
+/**
+ * Spanish-friendly message returned in the envelope when the searcher fails or
+ * times out — never a hang or an unhandled error (ERRORES.md #7).
+ */
+export const MCP_SEARCHER_FAILED_MESSAGE =
+  "No pude consultar el catálogo en este momento. Intenta de nuevo en unos segundos.";
 
 /**
  * Generic, short clarifying hint returned (as the spec's `nextQuestion`) when a

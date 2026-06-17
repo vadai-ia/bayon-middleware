@@ -38,6 +38,14 @@ export interface McpLogEntry {
   durationMs: number;
   /** Failure detail when status is `error`/`timeout`. */
   errorMessage?: string | null;
+  /**
+   * Per-call stock counts for the dashboard availability metric (M5 #5).
+   * Null when unobservable (e.g. while the Data Gateway forces its
+   * `available = true` default filter — ERRORES.md #20) or on no-results/error.
+   * When known, `resultCount = inStockCount + outOfStockCount`.
+   */
+  inStockCount?: number | null;
+  outOfStockCount?: number | null;
 }
 
 /**
@@ -77,6 +85,8 @@ async function writeLog(entry: McpLogEntry): Promise<void> {
       norm_query: normalizeForAnalytics(entry.args.query),
       req_color: normalizeForAnalytics(entry.args.color),
       req_coleccion: normalizeForAnalytics(entry.args.coleccion),
+      in_stock_count: entry.inStockCount ?? null,
+      out_of_stock_count: entry.outOfStockCount ?? null,
       error_message: entry.errorMessage ?? null,
     });
     if (error) {

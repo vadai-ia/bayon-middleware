@@ -1,60 +1,42 @@
 /**
- * Mock search over the in-memory catalog (M1).
+ * `buscar_productos` search (M2) — real data via Whaapy's Data Gateway.
  *
- * This is intentionally simple matching for the mock — NOT the query
- * refinement (accent stripping, style/color synonyms, width extraction) that
- * arrives in M2. The only contract that matters here is the returned
- * `BusquedaResultado` shape, which M2's external searcher must reproduce.
+ * Thin orchestrator: refine our tool's args → call the Data Gateway's
+ * `search_variant` tool → assemble the `BusquedaResultado` the envelope already
+ * expects, plus the per-call stock counts the M5 logging needs. The MCP
+ * response contract is unchanged; only the data SOURCE changed (the M1 mock is
+ * gone). A searcher failure/timeout surfaces as a typed `SearcherError` (from
+ * data-gateway.ts) so the route returns a clean `failed` status, never a hang.
  */
 
-import { MOCK_CATALOGO } from "@/lib/mcp/catalog-mock";
-import type { BuscarProductosArgs, BusquedaResultado, Producto } from "@/lib/mcp/types";
-
-/** Case-insensitive equality for a single-value facet filter. */
-function igual(a: string, b: string): boolean {
-  return a.trim().toLowerCase() === b.trim().toLowerCase();
-}
-
-/** Every whitespace-separated token of `query` must appear in the product. */
-function coincideQuery(producto: Producto, query: string): boolean {
-  const blob = [
-    producto.nombre,
-    producto.coleccion,
-    producto.color,
-    producto.tipo_de_tela,
-    producto.estilo,
-    producto.composicion,
-    producto.descripcion,
-  ]
-    .join(" ")
-    .toLowerCase();
-
-  const tokens = query.toLowerCase().split(/\s+/).filter(Boolean);
-  return tokens.every((token) => blob.includes(token));
-}
+import { afinarQuery } from "@/lib/mcp/afinar-query";
+import { buscarVariantes } from "@/lib/mcp/data-gateway";
+import type { BuscarProductosArgs, BusquedaOutcome } from "@/lib/mcp/types";
 
 /**
- * Run the mock search. Synchronous and instant — keeps us far under Whaapy's
- * 30s tools/call timeout (ERRORES.md #7). M2 makes this async against the
- * external searcher while preserving the return shape.
+ * Run a real catalog search. Resolves with the products, total, the refined
+ * filters actually used, and the stock summary. Rejects with `SearcherError`
+ * on timeout/failure (handled by the route).
  */
-export function buscarProductosMock(args: BuscarProductosArgs): BusquedaResultado {
-  const productos = MOCK_CATALOGO.filter((p) => {
-    if (!coincideQuery(p, args.query)) return false;
-    if (args.coleccion && !igual(p.coleccion, args.coleccion)) return false;
-    if (args.color && !igual(p.color, args.color)) return false;
-    if (args.tipo_de_tela && !igual(p.tipo_de_tela, args.tipo_de_tela)) return false;
-    if (args.estilo && !igual(p.estilo, args.estilo)) return false;
-    if (args.composicion && !igual(p.composicion, args.composicion)) return false;
-    if (args.ancho_min !== undefined && p.ancho_cm < args.ancho_min) return false;
-    if (args.ancho_max !== undefined && p.ancho_cm > args.ancho_max) return false;
-    if (args.precio_max !== undefined && p.precio_mxn > args.precio_max) return false;
-    return true;
-  });
+export async function buscarProductos(
+  args: BuscarProductosArgs,
+): Promise<BusquedaOutcome> {
+  const { gatewayArgs, usado } = afinarQuery(args);
+  const { productos, total, stock } = await buscarVariantes(gatewayArgs);
 
   return {
-    productos,
-    total: productos.length,
-    filtros_aplicados: args,
+    resultado: {
+      productos,
+      total,
+      // Echo what the search actually used: the folded free-text query and the
+      // canonical color sent as a real filter (the rest of the original args
+      // are preserved for transparency; coleccion/tipo/etc. live in `query`).
+      filtros_aplicados: {
+        ...args,
+        query: usado.query,
+        color: usado.color,
+      },
+    },
+    stock,
   };
 }
