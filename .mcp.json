@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "whaapy-docs": {
+      "type": "http",
+      "url": "https://docs.whaapy.com/mcp"
+    },
+    "data-gateway-docs": {
+      "type": "http",
+      "url": "https://whaapy-data.mintlify.app/mcp"
+    }
+  }
+}
